@@ -19,6 +19,7 @@
           listen: 127.0.0.1:9001
           version: "7.0"
         - name: website-php7
+          version: "7.0"
           state: absent
 
         # Checking that php-fpm successfully restarts with pool using the default php version and php 7.0
