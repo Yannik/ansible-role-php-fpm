@@ -1,0 +1,8 @@
+---
+- name: restart php-fpm
+  service: name={{ item }} state=restarted
+  with_items: 
+    - php5-fpm
+    - php5.6-fpm
+    - php7.0-fpm
+  when: (item != 'php5.6-fpm' and ansible_distribution == 'Debian') or (item != 'php5-fpm' and ansible_distribution != 'Debian')

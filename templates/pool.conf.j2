@@ -1,0 +1,26 @@
+;{{ ansible_managed }}
+
+
+[{{ item.name }}]
+; Defaults
+{% for directive, value in php_fpm_pool_defaults.iteritems() %}
+  {{ directive }} = {{ value }}
+{% endfor %}
+
+; Required directives
+{# These are always required because I include these here so the playbook fails if they are not present #}
+  user = {{ item.user }}
+  group = {{ item.group }}
+
+; Automatically generated
+{% if item.listen is not defined %}
+  listen = /var/run/php{{ item.version | default(5.6) }}-fpm-{{ item.name }}.socket
+{% endif %}
+
+; custom directives
+{% for directive, value in item.iteritems() if directive not in ['name', 'version', 'user', 'group'] %}
+  {{ directive }} = {{ value }}
+{% endfor %}
+
+listen.owner = www-data
+listen.group = www-data

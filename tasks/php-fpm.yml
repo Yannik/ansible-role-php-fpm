@@ -1,0 +1,32 @@
+- name: Create pool configurations
+  template: >
+    src=pool.conf.j2
+    dest=/etc/php/{{ item.version | default(5.6) }}/fpm/pool.d/{{ item.name }}.conf
+  with_items: php_fpm_pools
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent' and (ansible_distribution != 'Debian' or (item.version | default(5.6)) | version_compare('7.0', '>='))
+  notify: restart php-fpm
+
+- name: Create php5.6 pool configurations on debian
+  template: >
+    src=pool.conf.j2
+    dest=/etc/php5/fpm/pool.d/{{ item.name }}.conf
+  with_items: php_fpm_pools
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent' and ansible_distribution == 'Debian' and not (item.version | default(5.6)) | version_compare('7.0', '>=')
+  notify: restart php-fpm
+
+- name: Remove absent pools
+  file: path=/etc/php/{{ item.version | default(5.6) }}/fpm/pool.d/{{ item.name }}.conf state=absent
+  with_items: php_fpm_pools
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) == 'absent' and (ansible_distribution != 'Debian' or (item.version | default(5.6)) | version_compare('7.0', '>='))
+  notify: restart php-fpm
+
+- name: Remove absent pools on debian
+  file: path=/etc/php5/fpm/pool.d/{{ item.name }}.conf state=absent
+  with_items: php_fpm_pools
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) == 'absent' and ansible_distribution == 'Debian' and not (item.version | default(5.6)) | version_compare('7.0', '>=')
+  notify: restart php-fpm
+
+- name: Ensure users exist
+  user: name={{ item.user }} state=present createhome=no
+  with_items: php_fpm_pools
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
