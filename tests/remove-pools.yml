@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  remote_user: root
+  roles:
+    - role: ansible-role-php-fpm
+      php_fpm_pools:
+        - name: website
+          state: absent
+        - name: website
+          version: "7.0"
+          state: absent

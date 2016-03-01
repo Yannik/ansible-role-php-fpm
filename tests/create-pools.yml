@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  remote_user: root
+  roles:
+    - role: ansible-role-php-fpm
+      php_fpm_pools:
+        - name: website
+          user: website
+          group: website
+          listen: 127.0.0.1:9000
+        - name: website
+          user: website
+          group: website
+          listen: 127.0.0.1:9001
+          version: "7.0"
