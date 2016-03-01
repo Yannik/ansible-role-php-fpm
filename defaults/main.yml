@@ -5,3 +5,5 @@ php_fpm_pool_defaults:
   pm.start_servers: 2
   pm.min_spare_servers: 1
   pm.max_spare_servers: 2
+
+php_fpm_default_version: "5.6"

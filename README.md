@@ -32,7 +32,7 @@ Including an example of how to use your role (for instance, with variables passe
              - name: website2
                user: website2
                group: website2
-               version: 7.0
+               version: "7.0"
 
 License
 -------

@@ -1,32 +1,42 @@
 - name: Create pool configurations
   template: >
     src=pool.conf.j2
-    dest=/etc/php/{{ item.version | default(5.6) }}/fpm/pool.d/{{ item.name }}.conf
-  with_items: php_fpm_pools
-  when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent' and (ansible_distribution != 'Debian' or (item.version | default(5.6)) | version_compare('7.0', '>='))
-  notify: restart php-fpm
-
-- name: Create php5.6 pool configurations on debian
-  template: >
-    src=pool.conf.j2
-    dest=/etc/php5/fpm/pool.d/{{ item.name }}.conf
-  with_items: php_fpm_pools
-  when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent' and ansible_distribution == 'Debian' and not (item.version | default(5.6)) | version_compare('7.0', '>=')
+    dest=/etc/{{ (ansible_distribution != 'Debian' or (item.version | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.version | default(php_fpm_default_version), 'php5') }}/fpm/pool.d/{{ item.name }}.conf
+  with_items: "{{ php_fpm_pools }}"
+  register: php_fpm_pool_create_results
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
   notify: restart php-fpm
 
 - name: Remove absent pools
-  file: path=/etc/php/{{ item.version | default(5.6) }}/fpm/pool.d/{{ item.name }}.conf state=absent
-  with_items: php_fpm_pools
-  when: php_fpm_pools|lower != 'none' and (item.state | default()) == 'absent' and (ansible_distribution != 'Debian' or (item.version | default(5.6)) | version_compare('7.0', '>='))
+  file: path=/etc/{{ (ansible_distribution != 'Debian' or (item.version | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.version | default(php_fpm_default_version), 'php5') }}/fpm/pool.d/{{ item.name }}.conf state=absent
+  with_items: "{{ php_fpm_pools }}"
+  when: php_fpm_pools|lower != 'none' and (item.state | default()) == 'absent'
+  register: php_fpm_pool_remove_results
   notify: restart php-fpm
 
-- name: Remove absent pools on debian
-  file: path=/etc/php5/fpm/pool.d/{{ item.name }}.conf state=absent
-  with_items: php_fpm_pools
-  when: php_fpm_pools|lower != 'none' and (item.state | default()) == 'absent' and ansible_distribution == 'Debian' and not (item.version | default(5.6)) | version_compare('7.0', '>=')
-  notify: restart php-fpm
+#- name: Versions from the create list
+  #debug: msg={{php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
+#- name: Versions from the remove list
+  #debug: msg={{php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
+#- name: Versions from both lists combined
+#  debug: msg={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
+#- name: Versions from both lists combed set to a fact
+  #set_fact: php_fpm_pool_changed_versions={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
+#- name: Versions fact
+#  debug: msg={{php_fpm_pool_changed_versions }}
+#- name: Versions fact unique
+#  debug: msg={{php_fpm_pool_changed_versions | unique}}
+#- name: Versions from both lists combined with intersect
+#  debug: msg={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list | intersect(php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list)}}
+#- name: Versions from both lists combined and then ran through unique 
+#  debug: msg={{(php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list) | unique}}
+
+- name: Restart php-fpm if necessary
+  service: name={{item}}-fpm state=restarted
+  #debug: msg={{item}}
+  with_items: "{{(php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)| map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list | unique}}"
 
 - name: Ensure users exist
   user: name={{ item.user }} state=present createhome=no
-  with_items: php_fpm_pools
+  with_items: "{{ php_fpm_pools }}"
   when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
