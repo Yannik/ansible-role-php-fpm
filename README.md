@@ -1,6 +1,8 @@
 Description
 =========
 
+[![Build Status](https://travis-ci.org/Yannik/ansible-role-php-fpm.svg?branch=master)](https://travis-ci.org/Yannik/ansible-role-php-fpm)
+
 This role allows you to to configure php-fpm pools for both PHP 5.6 and 7.0 on the same system.
 
 Requirements
