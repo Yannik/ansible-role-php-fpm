@@ -2,4 +2,9 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - ansible-role-php-fpm
+    - role: ansible-role-php-fpm
+      php_fpm_pools:
+        - name: website
+          user: website
+          group: website
+          listen: 127.0.0.1:9105
