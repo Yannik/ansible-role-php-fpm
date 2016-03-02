@@ -23,7 +23,7 @@ Including an example of how to use your role (for instance, with variables passe
 
     - hosts: servers
       roles:
-         - role: php-fpm
+         - role: Yannik.php-fpm
            php_fpm_pools:
              - name: website
                user: website
