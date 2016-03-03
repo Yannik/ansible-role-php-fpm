@@ -17,6 +17,14 @@
   listen = /var/run/php{{ item.version | default(5.6) }}-fpm-{{ item.name }}.socket
 {% endif %}
 
+{% if php_fpm_secure_opcache %}
+{% if item["php_admin_value[opcache.file_cache]"] is not defined %}
+  php_admin_value[opcache.enable] = 0
+{% else %}
+  php_admin_value[opcache.file_cache_only] = 1
+{% endif %}
+{% endif %}
+
 ; custom directives
 {% for directive, value in item.iteritems() if directive not in ['name', 'version', 'user', 'group'] %}
   {{ directive }} = {{ value }}

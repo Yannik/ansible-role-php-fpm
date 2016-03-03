@@ -13,8 +13,16 @@ This role has been tested with PHP installed either from dotdeb in Debian or Ond
 Role Variables
 --------------
 
-
-`php_fpm_pools` is a list of dicts whose keys/values will be set in a pool config file. Use `version`, to specify the php version.
+* `php_fpm_pools`: The list of pools for php-fpm, each pool is a hash with a name entry (used for filename), and an optional version entry. All the other entries in the hash are pool directives (see http://php.net/manual/en/install.fpm.configuration.php).
+  * `version`: the php version this pool should use.
+    * Default: `php_fpm_default_version`
+  * `php_admin_value[opcache.file_cache]`: Set path to the opcache dir for this pool. Settings this enables opcache automatically when using `php_fpm_secure_opcache`.
+    * Example: `/var/www/site1/.opcache`. This folder should not be accessible to the public!
+* `php_fpm_pool_defaults`: A list of default directives used for all php-fpm pools
+* `php_fpm_default_version`: The default php version for pools
+  * Default: `'5.6'`
+* `php_fpm_secure_opcache`: whether to use a secured opcache setup (see below).
+  * Default: `True`. You should know what you are doing if you disable this!
 
 Example Playbook
 ----------------
@@ -33,6 +41,46 @@ Including an example of how to use your role (for instance, with variables passe
                user: website2
                group: website2
                version: "7.0"
+             - name: website3
+               user: website3
+               group: website3
+               php_admin_value[opcache.file_cache]: /var/www/website3/.opcache
+               version: "7.0"
+
+After Installation
+-------
+Check your running php-fpm pools using `ps -eH x|grep php`.
+
+What about opcache?
+-------
+With the default Ubuntu/Debian php-fpm packages, there is one php-fpm masterprocess for each php-version.
+The opcache and apc are held by the master process. Due to this  all sites for a certain php version share
+the same opcache/apc and the opcache has to have a size big enough for all the sites.
+This also has major security implications:
+  * https://web.archive.org/web/20150905223439/https://ikanobori.jp/php55-opcache-shared-hosting.html
+  * https://bugs.php.net/bug.php?id=69090
+  * https://bugs.php.net/bug.php?id=67481 (
+  * http://massivescale.blogspot.de/2013/06/zend-opcode-cacher-in-php-55-security.html
+  * https://weizenspr.eu/2014/php-fpm-chroot-zend-opcache-problem/
+
+I tested this and it is still possible with PHP 7.0! (Tried without chroot but instead just
+included /var/www/site1/secure.php from /var/www/site2/ while only site1 had read permissions.
+Was able to extract variables from /var/www/site1/secure.php this way.)
+
+  * https://ma.ttias.be/a-better-way-to-run-php-fpm/
+  * https://regilero.github.io/drupal/english/2013/05/16/Warning_chrooted_php_fpm_and_apc/
+
+This is quite cumbersome to do though.
+
+What many shared hosting providers do is disable opcache on php 5.6 and only offer it
+on php >= 7.0, which has the `opcache.file_cache_only` and use that. This way the opcache
+is file-based and created with the pool user as owner.
+
+The opcache must be enabled in the php.ini of the master process, it is not possible to selectively enable it.
+It is however possible (and advised) to disable the opcache using `php_admin_value[opcache.enable] = 0` for
+all pools which are not specially configured to use the opcache using a with `file_cache_only`.
+
+This role does this by default when `php_fpm_secure_opcache` is true.
 
 License
 -------
