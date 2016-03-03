@@ -32,7 +32,7 @@ Role Variables
 * `php_fpm_secure_opcache`: whether to use a secured opcache setup (see below).
     * Default: `True`. You should know what you are doing if you disable this!
 * `php_fpm_installed_versions`: This is an list of installed php versions which is used to set php.ini values in all installed versions.
-    * Default: `['5.6', '7.0']
+    * Default: `['5.6', '7.0']`
 
 Example Playbook
 ----------------
