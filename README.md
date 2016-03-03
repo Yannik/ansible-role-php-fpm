@@ -14,15 +14,15 @@ Role Variables
 --------------
 
 * `php_fpm_pools`: The list of pools for php-fpm, each pool is a hash with a name entry (used for filename), and an optional version entry. All the other entries in the hash are pool directives (see http://php.net/manual/en/install.fpm.configuration.php).
-  * `version`: the php version this pool should use.
-    * Default: `php_fpm_default_version`
-  * `php_admin_value[opcache.file_cache]`: Set path to the opcache dir for this pool. Settings this enables opcache automatically when using `php_fpm_secure_opcache`.
-    * Example: `/var/www/site1/.opcache`. This folder should not be accessible to the public!
+    * `version`: the php version this pool should use.
+        * Default: `php_fpm_default_version`
+    * `php_admin_value[opcache.file_cache]`: Set path to the opcache dir for this pool. Settings this enables opcache automatically when using `php_fpm_secure_opcache`.
+        * Example: `/var/www/site1/.opcache`. This folder should not be accessible to the public!
 * `php_fpm_pool_defaults`: A list of default directives used for all php-fpm pools
 * `php_fpm_default_version`: The default php version for pools
-  * Default: `'5.6'`
+    * Default: `'5.6'`
 * `php_fpm_secure_opcache`: whether to use a secured opcache setup (see below).
-  * Default: `True`. You should know what you are doing if you disable this!
+    * Default: `True`. You should know what you are doing if you disable this!
 
 Example Playbook
 ----------------
