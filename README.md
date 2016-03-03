@@ -19,10 +19,20 @@ Role Variables
     * `php_admin_value[opcache.file_cache]`: Set path to the opcache dir for this pool. Settings this enables opcache automatically when using `php_fpm_secure_opcache`.
         * Example: `/var/www/site1/.opcache`. This folder should not be accessible to the public!
 * `php_fpm_pool_defaults`: A list of default directives used for all php-fpm pools
+* `php_fpm_ini`: Customization for php-fpm's php.ini as a list of options, each option is a hash using the following structure:
+    * `option`: The name of the option
+    * `value`: The value of the option
+    * `section`: INI section name
+    * `versions`: Optional list of versions to apply the ini option on. By default, the option is applied to all php versions in `php_fpm_installed_versions`.
+        * Example: `['7.0']`
+    * `state`: `present` or `absent`
+        * Default: `present`
 * `php_fpm_default_version`: The default php version for pools
     * Default: `'5.6'`
 * `php_fpm_secure_opcache`: whether to use a secured opcache setup (see below).
     * Default: `True`. You should know what you are doing if you disable this!
+* `php_fpm_installed_versions`: This is an list of installed php versions which is used to set php.ini values in all installed versions.
+    * Default: `['5.6', '7.0']
 
 Example Playbook
 ----------------
@@ -32,6 +42,18 @@ Including an example of how to use your role (for instance, with variables passe
     - hosts: servers
       roles:
          - role: Yannik.php-fpm
+           php_ini_options:
+             - option: "date.timezone"
+               section: "PHP"
+               value: "Europe/Berlin"
+             - option: "opcache.enable"
+               section: "PHP"
+               value: "1"
+               versions: ['7.0']
+             - option: "opcache.enable"
+               section: "PHP"
+               value: "0"
+               versions: ['5.6']
            php_fpm_pools:
              - name: website
                user: website

@@ -30,6 +30,39 @@
 #  debug: msg={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list | intersect(php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list)}}
 #- name: Versions from both lists combined and then ran through unique 
 #  debug: msg={{(php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list) | unique}}
+#
+
+- name: Backup php.ini once
+  copy:
+    src: /etc/{{ (ansible_distribution != 'Debian' or (item | version_compare('7.0', '>='))) | ternary( 'php/' + item, 'php5') }}/fpm/php.ini 
+    dest: /etc/{{ (ansible_distribution != 'Debian' or (item | version_compare('7.0', '>='))) | ternary( 'php/' + item, 'php5') }}/fpm/php.ini.orig 
+    force: no
+    remote_src: yes
+  with_items: "{{ php_fpm_installed_versions | default([php_fpm_default_version]) }}"
+
+- name: Set php.ini options for specific versions
+  ini_file:
+    dest: /etc/{{ (ansible_distribution != 'Debian' or (item.1 | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.1 | default(php_fpm_default_version), 'php5') }}/fpm/php.ini
+    section: "{{ item.0.section }}"
+    option: "{{ item.0.option }}"
+    value: "{{ item.0.value }}"
+    state: "{{ item.0.state | default('present') }}"
+  with_subelements:
+    - "{{ php_fpm_ini }}"
+    - versions
+    - {'skip_missing': True}
+
+- name: Set php.ini options for all versions
+  ini_file:
+    dest: /etc/{{ (ansible_distribution != 'Debian' or ( item.1 | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.1 | default(php_fpm_default_version), 'php5') }}/fpm/php.ini
+    section: "{{ item.0.section }}"
+    option: "{{ item.0.option }}"
+    value: "{{ item.0.value }}"
+    state: "{{ item.0.state | default('present') }}"
+  with_nested:
+    - "{{ php_fpm_ini }}"
+    - "{{ php_fpm_installed_versions|default([php_fpm_default_version]) }}"
+  when: item.0.versions is not defined
 
 - name: Restart php-fpm if necessary
   service: name={{item}}-fpm state=restarted
