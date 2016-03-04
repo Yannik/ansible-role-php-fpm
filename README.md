@@ -79,9 +79,10 @@ With the default Ubuntu/Debian php-fpm packages, there is one php-fpm masterproc
 The opcache and apc are held by the master process. Due to this  all sites for a certain php version share
 the same opcache/apc and the opcache has to have a size big enough for all the sites.
 This also has major security implications:
+
   * https://web.archive.org/web/20150905223439/https://ikanobori.jp/php55-opcache-shared-hosting.html
   * https://bugs.php.net/bug.php?id=69090
-  * https://bugs.php.net/bug.php?id=67481 (
+  * https://bugs.php.net/bug.php?id=67481
   * http://massivescale.blogspot.de/2013/06/zend-opcode-cacher-in-php-55-security.html
   * https://weizenspr.eu/2014/php-fpm-chroot-zend-opcache-problem/
 
