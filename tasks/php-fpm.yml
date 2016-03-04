@@ -47,6 +47,7 @@
     option: "{{ item.0.option }}"
     value: "{{ item.0.value }}"
     state: "{{ item.0.state | default('present') }}"
+  register: php_fpm_ini_specific_versions_result
   with_subelements:
     - "{{ php_fpm_ini }}"
     - versions
@@ -59,15 +60,20 @@
     option: "{{ item.0.option }}"
     value: "{{ item.0.value }}"
     state: "{{ item.0.state | default('present') }}"
+  register: php_fpm_ini_all_versions_result
   with_nested:
     - "{{ php_fpm_ini }}"
     - "{{ php_fpm_installed_versions|default([php_fpm_default_version]) }}"
   when: item.0.versions is not defined
 
 - name: Restart php-fpm if necessary
-  service: name={{item}}-fpm state=restarted
-  #debug: msg={{item}}
-  with_items: "{{(php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)| map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list | unique}}"
+  service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=restarted
+  with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
+                  php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)|
+                  map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
+                  ((php_fpm_ini_specific_versions_result.results | selectattr('changed') | map(attribute='item.1') | list +
+                  php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
+                  map('regex_replace', '(.*)', 'php\\1') | list)) | unique }}"
 
 - name: Ensure opcache dir exists and can be written to by pool user
   file: path={{ item["php_admin_value[opcache.file_cache]"] }} state=directory mode=700 owner={{ item.user }} group={{ item.group }}
