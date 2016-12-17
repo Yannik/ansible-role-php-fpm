@@ -14,7 +14,7 @@
 
 ; Automatically generated
 {% if item.listen is not defined %}
-  listen = /var/run/php{{ item.version | default(5.6) }}-fpm-{{ item.name }}.socket
+  listen = /run/php/{{ item.name }}.sock
 {% endif %}
 
 {% if php_fpm_secure_opcache %}
