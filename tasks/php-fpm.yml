@@ -64,16 +64,16 @@
     - "{{ php_fpm_installed_versions|default([php_fpm_default_version]) }}"
   when: item.0.versions is not defined
   
-- name: Ensure opcache dir exists and can be written to by pool user
-  file: path={{ item["php_admin_value[opcache.file_cache]"] }} state=directory mode=700 owner={{ item.user }} group={{ item.group }}
-  with_items: "{{ php_fpm_pools }}"
-  when: item["php_admin_value[opcache.file_cache]"] is defined
-
 - name: Ensure users exist
   user: name={{ item.user }} state=present createhome=no
   with_items: "{{ php_fpm_pools }}"
   when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
   
+- name: Ensure opcache dir exists and can be written to by pool user
+  file: path={{ item["php_admin_value[opcache.file_cache]"] }} state=directory mode=700 owner={{ item.user }} group={{ item.group }}
+  with_items: "{{ php_fpm_pools }}"
+  when: item["php_admin_value[opcache.file_cache]"] is defined
+
 - name: Restart php-fpm if necessary
   service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=restarted
   with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
