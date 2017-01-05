@@ -74,8 +74,17 @@
   with_items: "{{ php_fpm_pools }}"
   when: item["php_admin_value[opcache.file_cache]"] is defined
 
-- name: Restart php-fpm if necessary
-  service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=restarted
+- name: Restart php-fpm if necessary (stopping)
+  service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=stopped
+  with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
+                  php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)|
+                  map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
+                  ((php_fpm_ini_specific_versions_result.results | selectattr('changed') | map(attribute='item.1') | list +
+                  php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
+                  map('regex_replace', '(.*)', 'php\\1') | list)) | unique }}"
+
+- name: Restart php-fpm if necessary (starting)
+  service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=started
   with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
                   php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)|
                   map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
