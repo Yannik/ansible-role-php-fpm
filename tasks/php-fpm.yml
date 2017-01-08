@@ -48,11 +48,12 @@
     option: "{{ item.0.option }}"
     value: "{{ item.0.value }}"
     state: "{{ item.0.state | default('present') }}"
-  register: php_fpm_ini_specific_versions_result
+  when: item.1 in php_fpm_installed_versions
   with_subelements:
     - "{{ php_fpm_ini }}"
     - versions
     - {'skip_missing': True}
+  register: php_fpm_ini_specific_versions_result
 
 - name: Set php.ini options for all versions
   ini_file:
