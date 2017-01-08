@@ -30,6 +30,9 @@
 #  debug: msg={{(php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list) | unique}}
 #
 
+- name: Make sure run directory exists
+  file: path=/run/php state=directory owner=www-data group=www-data
+
 - name: Backup php.ini once
   copy:
     src: /etc/{{ (ansible_distribution != 'Debian' or (item | version_compare('7.0', '>='))) | ternary( 'php/' + item, 'php5') }}/fpm/php.ini
