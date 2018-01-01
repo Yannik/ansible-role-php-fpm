@@ -17,12 +17,9 @@
   listen = /run/php/{{ item.name }}.sock
 {% endif %}
 
-{% if php_fpm_secure_opcache %}
-{% if item["php_admin_value[opcache.file_cache]"] is not defined %}
+{% if item["php_admin_value[opcache.file_cache_only]"] is not defined and
+"opcache.validate_permission" not in (php_fpm_ini | map(attribute='option') | list ) %}
   php_admin_value[opcache.enable] = 0
-{% else %}
-  php_admin_value[opcache.file_cache_only] = 1
-{% endif %}
 {% endif %}
 
 ; custom directives

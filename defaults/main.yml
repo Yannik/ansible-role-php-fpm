@@ -8,8 +8,12 @@ php_fpm_pool_defaults:
 
 php_fpm_default_version: "5.6"
 
-php_fpm_secure_opcache: True
-
 php_fpm_installed_versions: ['5.6', '7.0']
 
-php_fpm_ini: []
+php_fpm_ini:
+  - option: "opcache.validate_permission"
+    section: "PHP"
+    value: "1"
+  - option: "opcache.restrict_api"
+    section: "PHP"
+    value: "/does/not/exist/"
