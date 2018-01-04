@@ -1,49 +1,31 @@
 - name: Create pool configurations
   template: >
     src=pool.conf.j2
-    dest=/etc/{{ (ansible_distribution != 'Debian' or (item.version | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.version | default(php_fpm_default_version), 'php5') }}/fpm/pool.d/{{ item.name }}.conf
+    dest=/etc/{{ 'php/' + item.version | default(php_fpm_default_version) }}/fpm/pool.d/{{ item.name }}.conf
   with_items: "{{ php_fpm_pools }}"
   register: php_fpm_pool_create_results
   when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
 
 - name: Remove absent pools
-  file: path=/etc/{{ (ansible_distribution != 'Debian' or (item.version | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.version | default(php_fpm_default_version), 'php5') }}/fpm/pool.d/{{ item.name }}.conf state=absent
+  file: path=/etc/{{ 'php/' + item.version | default(php_fpm_default_version) }}/fpm/pool.d/{{ item.name }}.conf state=absent
   with_items: "{{ php_fpm_pools }}"
   when: php_fpm_pools|lower != 'none' and (item.state | default()) == 'absent'
   register: php_fpm_pool_remove_results
-
-#- name: Versions from the create list
-  #debug: msg={{php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
-#- name: Versions from the remove list
-  #debug: msg={{php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
-#- name: Versions from both lists combined
-#  debug: msg={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
-#- name: Versions from both lists combed set to a fact
-  #set_fact: php_fpm_pool_changed_versions={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list}}
-#- name: Versions fact
-#  debug: msg={{php_fpm_pool_changed_versions }}
-#- name: Versions fact unique
-#  debug: msg={{php_fpm_pool_changed_versions | unique}}
-#- name: Versions from both lists combined with intersect
-#  debug: msg={{php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list | intersect(php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list)}}
-#- name: Versions from both lists combined and then ran through unique
-#  debug: msg={{(php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='item.version') | list + php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='item.version') | list) | unique}}
-#
 
 - name: Make sure run directory exists
   file: path=/run/php state=directory owner=www-data group=www-data
 
 - name: Backup php.ini once
   copy:
-    src: /etc/{{ (ansible_distribution != 'Debian' or (item | version_compare('7.0', '>='))) | ternary( 'php/' + item, 'php5') }}/fpm/php.ini
-    dest: /etc/{{ (ansible_distribution != 'Debian' or (item | version_compare('7.0', '>='))) | ternary( 'php/' + item, 'php5') }}/fpm/php.ini.orig
+    src: /etc/{{ 'php/' + item }}/fpm/php.ini
+    dest: /etc/{{ 'php/' + item }}/fpm/php.ini.orig
     force: no
     remote_src: yes
   with_items: "{{ php_fpm_installed_versions | default([php_fpm_default_version]) }}"
 
 - name: Set php.ini options for specific versions
   ini_file:
-    dest: /etc/{{ (ansible_distribution != 'Debian' or (item.1 | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.1 | default(php_fpm_default_version), 'php5') }}/fpm/php.ini
+    dest: /etc/{{ 'php/' + item.1 }}/fpm/php.ini
     section: "{{ item.0.section }}"
     option: "{{ item.0.option }}"
     value: "{{ item.0.value }}"
@@ -57,7 +39,7 @@
 
 - name: Set php.ini options for all versions
   ini_file:
-    dest: /etc/{{ (ansible_distribution != 'Debian' or ( item.1 | default(php_fpm_default_version)) | version_compare('7.0', '>=')) | ternary( 'php/' + item.1 | default(php_fpm_default_version), 'php5') }}/fpm/php.ini
+    dest: /etc/{{ 'php/' + item.1 }}/fpm/php.ini
     section: "{{ item.0.section }}"
     option: "{{ item.0.option }}"
     value: "{{ item.0.value }}"
@@ -79,7 +61,7 @@
   when: item["php_admin_value[opcache.file_cache]"] is defined
 
 - name: Restart php-fpm if necessary (stopping)
-  service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=stopped
+  service: name={{ item }}-fpm state=stopped
   with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
                   php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)|
                   map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
@@ -87,11 +69,6 @@
                   php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
                   map('regex_replace', '(.*)', 'php\\1') | list)) | unique }}"
 
-- name: Restart php-fpm if necessary (starting)
-  service: name={{ (ansible_distribution != 'Debian' or (item != 'php5.6')) | ternary (item, 'php5') }}-fpm state=started
-  with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
-                  php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)|
-                  map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
-                  ((php_fpm_ini_specific_versions_result.results | selectattr('changed') | map(attribute='item.1') | list +
-                  php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
-                  map('regex_replace', '(.*)', 'php\\1') | list)) | unique }}"
+- name: Start php-fpm
+  service: name=php{{ item }}-fpm state=started
+  with_items: "{{ php_fpm_installed_versions | default([php_fpm_default_version]) }}"
