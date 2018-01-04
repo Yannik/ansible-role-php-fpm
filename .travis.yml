@@ -14,7 +14,7 @@ addons:
 before_install:
   - sudo add-apt-repository -y ppa:ondrej/php
   - sudo apt-get update -qq
-  - sudo apt-get install -qq php7.2-fpm php5.6-fpm
+  - sudo apt-get install -qq php7.0-fpm php5.6-fpm
 
 install:
   # Install ansible
@@ -30,9 +30,11 @@ script:
   - ansible-playbook tests/create-pools.yml -i tests/inventory --syntax-check
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --syntax-check
 
-  - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
+  - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sud
+  - systemctl status php7.0-fpm
   - >
     ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
+  - systemctl status php7.0-fpm
 
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --connection=local --sudo
   - >
