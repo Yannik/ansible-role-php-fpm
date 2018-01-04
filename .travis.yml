@@ -32,7 +32,7 @@ script:
 
   - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
   - sudo service php7.2-fpm status
-  - sudo service php7.2-fpm start
+  - sudo service php7.2-fpm start && sleep 10
   - sudo service php7.2-fpm status
   - >
     ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
