@@ -31,10 +31,10 @@ script:
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --syntax-check
 
   - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
-  - service php7.0-fpm status
+  - service php7.2-fpm status
   - >
     ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
-  - service php7.0-fpm status
+  - service php7.2-fpm status
 
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --connection=local --sudo
   - >
