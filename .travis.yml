@@ -14,7 +14,7 @@ addons:
 before_install:
   - sudo add-apt-repository -y ppa:ondrej/php
   - sudo apt-get update -qq
-  - sudo apt-get install -qq php7.2-fpm php5.6-fpm
+  - sudo apt-get install -qq php7.2-fpm php5.6-fpm libpcre3
 
 install:
   # Install ansible
@@ -31,18 +31,16 @@ script:
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --syntax-check
 
   - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
+  - sudo service php7.2-fpm status
+  - /usr/sbin/php-fpm7.2 --nodaemonize --fpm-config /etc/php/7.2/fpm/php-fpm.conf
+  - sudo service php7.2-fpm status
   - >
     ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
-    | grep -q 'changed=0.*failed=0'
-    && (echo 'Idempotence test: pass' && exit 0)
-    || (echo 'Idempotence test: fail' && exit 1)
+  - service php7.2-fpm status
 
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --connection=local --sudo
   - >
     ansible-playbook tests/remove-pools.yml -i tests/inventory --connection=local --sudo
-    | grep -q 'changed=0.*failed=0'
-    && (echo 'Idempotence test: pass' && exit 0)
-    || (echo 'Idempotence test: fail' && exit 1)
 
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/

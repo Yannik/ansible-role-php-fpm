@@ -3,6 +3,7 @@
   remote_user: root
   roles:
     - role: ansible-role-php-fpm
+      php_fpm_installed_versions: ['5.6', '7.2'] 
       php_fpm_pools:
         - name: website
           user: website
