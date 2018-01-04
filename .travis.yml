@@ -30,11 +30,11 @@ script:
   - ansible-playbook tests/create-pools.yml -i tests/inventory --syntax-check
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --syntax-check
 
-  - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sud
-  - systemctl status php7.0-fpm
+  - ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
+  - service php7.0-fpm status
   - >
     ansible-playbook tests/create-pools.yml -i tests/inventory --connection=local --sudo
-  - systemctl status php7.0-fpm
+  - service php7.0-fpm status
 
   - ansible-playbook tests/remove-pools.yml -i tests/inventory --connection=local --sudo
   - >
