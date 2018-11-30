@@ -3,7 +3,7 @@
 
 [{{ item.name }}]
 ; Defaults
-{% for directive, value in php_fpm_pool_defaults.iteritems() %}
+{% for directive, value in php_fpm_pool_defaults.items() %}
   {{ directive }} = {{ value }}
 {% endfor %}
 
@@ -23,7 +23,7 @@
 {% endif %}
 
 ; custom directives
-{% for directive, value in item.iteritems() if directive not in ['name', 'version', 'user', 'group'] %}
+{% for directive, value in item.items() if directive not in ['name', 'version', 'user', 'group'] %}
   {{ directive }} = {{ value }}
 {% endfor %}
 
