@@ -67,7 +67,7 @@
                   map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
                   ((php_fpm_ini_specific_versions_result.results | selectattr('changed') | map(attribute='item.1') | list +
                   php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
-                  map('regex_replace', '(.*)', 'php\\1') | list)) | unique }}"
+                  map('regex_replace', '^', 'php') | list)) | unique }}"
 
 - name: Start php-fpm
   service: name=php{{ item }}-fpm state=started
