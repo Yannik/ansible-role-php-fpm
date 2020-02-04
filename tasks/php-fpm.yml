@@ -1,16 +1,18 @@
-- name: Remove default 'www' pool
+- name: Find configured pools
+  shell: ls /etc/php/*/fpm/pool.d/*.conf
+  changed_when: False
+  register: php_fpm_current_pools
+
+# Requires Jinja2 2.11 to be installed to use map(..,default=)
+- name: Remove invalid pools
   file:
-    path: "/etc/php/{{ item }}/fpm/pool.d/www.conf"
+    path: "{{ item }}"
     state: absent
-  when: php_fpm_pools | selectattr('name', 'match', 'www') | list | length == 0
-  with_items:
-    - '5.6'
-    - '7.0'
-    - '7.1'
-    - '7.2'
-    - '7.3'
-    - '7.4'
-  register: php_fpm_remove_www
+  when: >
+    item | regex_replace('/etc/php/([0-9\\.]*)/.*', '\\1') not in
+    php_fpm_pools | selectattr('name', 'match', item | basename | regex_replace('.conf$', '')) | map(attribute='version', default=php_fpm_default_version) | list
+  with_items: "{{ php_fpm_current_pools.stdout_lines }}"
+  register: php_fpm_remove_pool
 
 - name: Create pool configurations
   template: >
@@ -78,7 +80,7 @@
   service: name=php{{ item }}-fpm state=stopped
   with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
                   php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list +
-                  php_fpm_remove_www.results | selectattr('changed') | map(attribute='path') | list)|
+                  php_fpm_remove_pool.results | selectattr('changed') | map(attribute='path') | list)|
                   map('regex_replace', '/etc/php/([0-9\\.]*)/fpm.*', '\\1') | list) +
                   ((php_fpm_ini_specific_versions_result.results | selectattr('changed') | map(attribute='item.1') | list +
                   php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
