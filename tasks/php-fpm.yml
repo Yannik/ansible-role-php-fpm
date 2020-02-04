@@ -1,3 +1,17 @@
+- name: Remove default 'www' pool
+  file:
+    path: "/etc/php/{{ item }}/fpm/pool.d/www.conf"
+    state: absent
+  when: php_fpm_pools | selectattr('name', 'match', 'www') | list | length == 0
+  with_items:
+    - '5.6'
+    - '7.0'
+    - '7.1'
+    - '7.2'
+    - '7.3'
+    - '7.4'
+  register: php_fpm_remove_www
+
 - name: Create pool configurations
   template: >
     src=pool.conf.j2
@@ -61,13 +75,14 @@
   when: item["php_admin_value[opcache.file_cache]"] is defined
 
 - name: Restart php-fpm if necessary (stopping)
-  service: name={{ item }}-fpm state=stopped
+  service: name=php{{ item }}-fpm state=stopped
   with_items: "{{ (((php_fpm_pool_create_results.results | selectattr('changed') | map(attribute='dest') | list +
-                  php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list)|
-                  map('regex_replace', '/etc/(php5?)/?([0-9\\.]*)/fpm.*', '\\1\\2') | list) +
+                  php_fpm_pool_remove_results.results | selectattr('changed') | map(attribute='path') | list +
+                  php_fpm_remove_www.results | selectattr('changed') | map(attribute='path') | list)|
+                  map('regex_replace', '/etc/php/([0-9\\.]*)/fpm.*', '\\1') | list) +
                   ((php_fpm_ini_specific_versions_result.results | selectattr('changed') | map(attribute='item.1') | list +
                   php_fpm_ini_all_versions_result.results | selectattr('changed') | map(attribute='item.1') | list)|
-                  map('regex_replace', '^', 'php') | list)) | unique }}"
+                  list)) | unique }}"
 
 - name: Start php-fpm
   service: name=php{{ item }}-fpm state=started
