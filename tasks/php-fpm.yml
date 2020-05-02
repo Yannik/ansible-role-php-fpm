@@ -67,7 +67,7 @@
   when: item.0.versions is not defined
 
 - name: Ensure users exist
-  user: name={{ item.user }} state=present
+  user: name={{ item.user }} shell={{ php_fpm_user_shell|default(omit) }}
   with_items: "{{ php_fpm_pools }}"
   when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
 
