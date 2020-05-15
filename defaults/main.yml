@@ -12,6 +12,8 @@ php_fpm_installed_versions: ['7.3']
 
 php_fpm_user_shell: /bin/bash
 
+php_fpm_pools: []
+
 php_fpm_ini:
   - option: "opcache.validate_permission"
     section: "PHP"
