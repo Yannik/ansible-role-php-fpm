@@ -1,5 +1,7 @@
 - name: Find configured pools
-  shell: ls /etc/php/*/fpm/pool.d/*.conf
+  shell: shopt -s nullglob && ls /etc/php/*/fpm/pool.d/*.conf
+  args:
+    executable: /bin/bash
   changed_when: False
   register: php_fpm_current_pools
 
