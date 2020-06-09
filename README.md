@@ -13,7 +13,7 @@ This role has been tested with PHP installed either from dotdeb in Debian or Ond
 Role Variables
 --------------
 
-* `php_fpm_pools`: The list of pools for php-fpm, each pool is a hash with a name entry (used for filename), and an optional version entry. All the other entries in the hash are pool directives (see http://php.net/manual/en/install.fpm.configuration.php).
+* `php_fpm_pools`: The list of pools for php-fpm, each pool is a hash with a `name` entry (used for filename), `home` entry, and an optional `version` entry. All the other entries in the hash are pool directives (see http://php.net/manual/en/install.fpm.configuration.php).
     * `version`: the php version this pool should use.
         * Default: `php_fpm_default_version`
     * `php_admin_value[opcache.file_cache]`: Set path to the opcache dir for this pool.

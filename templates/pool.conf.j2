@@ -23,7 +23,7 @@
 {% endif %}
 
 ; custom directives
-{% for directive, value in item.items() if directive not in ['name', 'version', 'user', 'group'] %}
+{% for directive, value in item.items() if directive not in ['name', 'version', 'user', 'group', 'home'] %}
   {{ directive }} = {{ value }}
 {% endfor %}
 
