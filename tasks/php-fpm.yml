@@ -55,7 +55,7 @@
     - {'skip_missing': True}
   register: php_fpm_ini_specific_versions_result
 
-- name: Set php.ini options for all versions
+- name: Set default php.ini options for all versions
   ini_file:
     dest: /etc/{{ 'php/' + item.1 }}/fpm/php.ini
     section: "{{ item.0.section }}"
@@ -64,7 +64,21 @@
     state: "{{ item.0.state | default('present') }}"
   register: php_fpm_ini_all_versions_result
   with_nested:
-    - "{{ php_fpm_ini }}"
+    - "{{ php_fpm_ini_default }}"
+    - "{{ php_fpm_installed_versions|default([php_fpm_default_version]) }}"
+  when: item.0.versions is not defined and
+        item.0.option not in php_fpm_ini|selectattr('section', 'match', item.0.section)|map(attribute='option')|list
+
+- name: Set custom php.ini options for all versions
+  ini_file:
+    dest: /etc/{{ 'php/' + item.1 }}/fpm/php.ini
+    section: "{{ item.0.section }}"
+    option: "{{ item.0.option }}"
+    value: "{{ item.0.value }}"
+    state: "{{ item.0.state | default('present') }}"
+  register: php_fpm_ini_all_versions_result
+  with_nested:
+    - "{{ php_fpm_ini|default([]) }}"
     - "{{ php_fpm_installed_versions|default([php_fpm_default_version]) }}"
   when: item.0.versions is not defined
 
