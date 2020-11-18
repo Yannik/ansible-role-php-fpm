@@ -78,7 +78,7 @@
     state: "{{ item.0.state | default('present') }}"
   register: php_fpm_ini_all_versions_result
   with_nested:
-    - "{{ php_fpm_ini|default([]) }}"
+    - "{{ php_fpm_ini }}"
     - "{{ php_fpm_installed_versions|default([php_fpm_default_version]) }}"
   when: item.0.versions is not defined
 

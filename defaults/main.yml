@@ -14,6 +14,9 @@ php_fpm_user_shell: /bin/bash
 
 php_fpm_pools: []
 
+# this overrides the php_fpm_ini_default options
+php_fpm_ini: []
+
 php_fpm_ini_default:
   - option: "opcache.validate_permission"
     section: "PHP"
