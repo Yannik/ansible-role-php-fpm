@@ -18,7 +18,8 @@
 {% endif %}
 
 {% if item["php_admin_value[opcache.file_cache_only]"] is not defined and
-"opcache.validate_permission" not in (php_fpm_ini | map(attribute='option') | list ) %}
+"opcache.validate_permission" not in (php_fpm_ini | map(attribute='option') | list ) and
+"opcache.validate_permission" not in (php_fpm_ini_default | map(attribute='option') | list ) %}
   php_admin_value[opcache.enable] = 0
 {% endif %}
 
