@@ -108,4 +108,4 @@
 - name: Start php-fpm
   service: name=php{{ item }}-fpm state=started
   with_items: "{{ php_fpm_installed_versions | default([php_fpm_default_version]) }}"
-  when: php_fpm_pools|length > 0 
+  when: item in php_fpm_pools|map(attribute="version", default=php_fpm_default_version)|list
