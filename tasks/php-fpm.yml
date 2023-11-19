@@ -17,9 +17,10 @@
   register: php_fpm_remove_pool
 
 - name: Create pool configurations
-  template: >
-    src=pool.conf.j2
-    dest=/etc/{{ 'php/' + item.version | default(php_fpm_default_version) }}/fpm/pool.d/{{ item.name }}.conf
+  template:
+    src: pool.conf.j2
+    dest: /etc/{{ 'php/' + item.version | default(php_fpm_default_version) }}/fpm/pool.d/{{ item.name }}.conf
+    mode: 0600
   with_items: "{{ php_fpm_pools }}"
   register: php_fpm_pool_create_results
   when: php_fpm_pools|lower != 'none' and (item.state | default()) != 'absent'
@@ -38,6 +39,7 @@
     src: /etc/{{ 'php/' + item }}/fpm/php.ini
     dest: /etc/{{ 'php/' + item }}/fpm/php.ini.orig
     force: no
+    mode: 0600
     remote_src: yes
   with_items: "{{ php_fpm_installed_versions | default([php_fpm_default_version]) }}"
 
@@ -48,6 +50,7 @@
     option: "{{ item.0.option }}"
     value: "{{ item.0.value }}"
     state: "{{ item.0.state | default('present') }}"
+    mode: 0600
   when: item.1 in php_fpm_installed_versions
   with_subelements:
     - "{{ php_fpm_ini }}"
