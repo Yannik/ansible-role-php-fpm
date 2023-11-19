@@ -10,7 +10,7 @@
 ; Required directives
 {# These are always required because I include these here so the playbook fails if they are not present #}
   user = {{ item.user }}
-  group = {{ item.group }}
+  group = {{ item.group|default(item.user) }}
 
 ; Automatically generated
 {% if item.listen is not defined %}
